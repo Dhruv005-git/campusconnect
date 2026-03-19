@@ -25,7 +25,7 @@ export default function ListingDetail() {
   const [activeImg, setActiveImg] = useState(0)
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchListing = async () => {
       try {
         const res = await api.get(`/listings/${id}`)
         setListing(res.data)
@@ -35,7 +35,7 @@ export default function ListingDetail() {
         setLoading(false)
       }
     }
-    fetch()
+    fetchListing()
   }, [id])
 
   if (loading) return (
@@ -173,13 +173,16 @@ export default function ListingDetail() {
               </div>
             ) : (
               <div className="flex gap-3">
-                
-                <a href={`mailto:${listing.seller?.email}?subject=Interested in ${listing.title}`}
+                <button
+                  onClick={() => navigate(`/messages/${listing.seller?._id}`)}
                   className="flex-1 border border-[#534AB7] text-[#534AB7] rounded-xl py-3 text-sm font-medium text-center hover:bg-[#EEEDFE] transition-colors"
                 >
                   Contact seller
-                </a>
-                <button className="flex-1 bg-[#534AB7] text-white rounded-xl py-3 text-sm font-medium hover:bg-[#3C3489] transition-colors">
+                </button>
+                <button
+                  onClick={() => navigate(`/messages/${listing.seller?._id}`)}
+                  className="flex-1 bg-[#534AB7] text-white rounded-xl py-3 text-sm font-medium hover:bg-[#3C3489] transition-colors"
+                >
                   Buy now
                 </button>
               </div>

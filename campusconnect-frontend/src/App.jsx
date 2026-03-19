@@ -11,6 +11,7 @@ import UploadNote from "./pages/UploadNote"
 import Profile from "./pages/Profile"
 import Lending from "./pages/Lending"
 import CreateLendItem from "./pages/CreateLendItem"
+import Messages from "./pages/Messages"
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -40,6 +41,8 @@ export default function App() {
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/lending" element={<ProtectedRoute><Lending /></ProtectedRoute>} />
     <Route path="/lend/create" element={<ProtectedRoute><CreateLendItem /></ProtectedRoute>} />
+    <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+    <Route path="/messages/:otherUserId" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
     </Routes>
   )
 }

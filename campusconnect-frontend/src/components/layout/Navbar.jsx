@@ -1,10 +1,13 @@
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "../../context/AuthContext"
+import { useState, useEffect } from "react"
+import api from "../../api/axios"
 
 export default function Navbar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const [unread, setUnread] = useState(0)
 
   const handleLogout = () => {
     logout()
@@ -12,6 +15,18 @@ export default function Navbar() {
   }
 
   const isActive = (path) => location.pathname === path
+
+        useEffect(() => {
+        const fetchUnread = async () => {
+            try {
+            const res = await api.get("/messages/unread")
+            setUnread(res.data.count)
+            } catch {}
+        }
+        fetchUnread()
+        const interval = setInterval(fetchUnread, 30000) // har 30 sec mein check
+        return () => clearInterval(interval)
+        }, [])
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -69,6 +84,21 @@ export default function Navbar() {
             }`}
             >
             Lending
+            </Link>
+            <Link
+            to="/messages"
+            className={`px-3 py-1.5 rounded-lg text-sm transition-colors relative ${
+                isActive("/messages")
+                ? "bg-[#EEEDFE] text-[#3C3489] font-medium"
+                : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+            }`}
+            >
+            Messages
+            {unread > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                {unread}
+                </span>
+            )}
             </Link>
         </div>
 
