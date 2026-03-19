@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react"
-import { useParams, useNavigate } from "react-router-dom"
-import { useAuth } from "../context/AuthContext"
-import Navbar from "../components/layout/Navbar"
+import { useEffect, useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
 import api from "../api/axios"
+import Navbar from "../components/layout/Navbar"
+import { useAuth } from "../context/AuthContext"
 
 const conditionConfig = {
   new:  { label: "Like new", bg: "bg-[#EEEDFE]", text: "text-[#3C3489]" },
@@ -25,7 +25,7 @@ export default function ListingDetail() {
   const [activeImg, setActiveImg] = useState(0)
 
   useEffect(() => {
-    const fetchListing = async () => {
+    const fetch = async () => {
       try {
         const res = await api.get(`/listings/${id}`)
         setListing(res.data)
@@ -35,7 +35,7 @@ export default function ListingDetail() {
         setLoading(false)
       }
     }
-    fetchListing()
+    fetch()
   }, [id])
 
   if (loading) return (
