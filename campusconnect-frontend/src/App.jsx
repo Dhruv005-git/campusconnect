@@ -3,6 +3,9 @@ import { useAuth } from "./context/AuthContext"
 import Register from "./pages/Register"
 import Login from "./pages/Login"
 import VerifyOTP from "./pages/VerifyOTP"
+import Marketplace from "./pages/Marketplace"
+import ListingDetail from "./pages/ListingDetail"
+import CreateListing from "./pages/CreateListing"
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -11,7 +14,7 @@ function ProtectedRoute({ children }) {
 }
 
 export default function App() {
-  const { user, loading } = useAuth()
+  const { loading } = useAuth()
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center text-gray-400">
@@ -24,15 +27,9 @@ export default function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />
       <Route path="/verify-otp" element={<VerifyOTP />} />
-      <Route path="/" element={
-        <ProtectedRoute>
-          <div className="min-h-screen flex items-center justify-center">
-            <h1 className="text-2xl font-medium text-gray-900">
-              Home page coming soon! 🚀
-            </h1>
-          </div>
-        </ProtectedRoute>
-      } />
+      <Route path="/" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
+      <Route path="/listings/:id" element={<ProtectedRoute><ListingDetail /></ProtectedRoute>} />
+      <Route path="/create-listing" element={<ProtectedRoute><CreateListing /></ProtectedRoute>} />
     </Routes>
   )
 }
