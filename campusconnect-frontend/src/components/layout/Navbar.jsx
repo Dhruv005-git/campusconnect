@@ -55,6 +55,11 @@ export default function Navbar() {
             >
             Notes
           </Link>
+          <Link to="/profile">
+            <div className="w-8 h-8 rounded-full bg-[#534AB7] flex items-center justify-center text-white text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity">
+                {user?.name?.charAt(0).toUpperCase()}
+            </div>
+          </Link>
         </div>
 
         {/* Right side */}

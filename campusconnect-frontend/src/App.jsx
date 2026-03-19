@@ -8,6 +8,7 @@ import ListingDetail from "./pages/ListingDetail"
 import CreateListing from "./pages/CreateListing"
 import Notes from "./pages/Notes"
 import UploadNote from "./pages/UploadNote"
+import Profile from "./pages/Profile"
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -34,6 +35,7 @@ export default function App() {
       <Route path="/create-listing" element={<ProtectedRoute><CreateListing /></ProtectedRoute>} />
       <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
       <Route path="/upload-note" element={<ProtectedRoute><UploadNote /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
     </Routes>
   )
 }

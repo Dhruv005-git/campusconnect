@@ -86,3 +86,18 @@ export const login = async (req, res) => {
 export const getMe = async (req, res) => {
   res.json(req.user)
 }
+
+// Update profile
+export const updateProfile = async (req, res) => {
+  try {
+    const { name, department, year } = req.body
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { name, department, year },
+      { new: true }
+    ).select("-password")
+    res.json(user)
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
