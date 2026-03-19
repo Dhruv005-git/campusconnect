@@ -12,6 +12,7 @@ import Profile from "./pages/Profile"
 import Lending from "./pages/Lending"
 import CreateLendItem from "./pages/CreateLendItem"
 import Messages from "./pages/Messages"
+import Home from "./pages/Home"
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -33,7 +34,8 @@ export default function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />
       <Route path="/verify-otp" element={<VerifyOTP />} />
-      <Route path="/" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
+      <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+      <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
       <Route path="/listings/:id" element={<ProtectedRoute><ListingDetail /></ProtectedRoute>} />
       <Route path="/create-listing" element={<ProtectedRoute><CreateListing /></ProtectedRoute>} />
       <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />

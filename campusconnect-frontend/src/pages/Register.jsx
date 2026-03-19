@@ -70,14 +70,14 @@ export default function Register() {
             </div>
 
             <div>
-              <label className="text-sm text-gray-600 mb-1 block">College email</label>
+              <label className="text-sm text-gray-600 mb-1 block">College email ID</label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
                 required
-                placeholder="you@gmail.com"
+                placeholder="name@sot.pdpu.ac.in"
                 className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#534AB7] transition-colors"
               />
             </div>

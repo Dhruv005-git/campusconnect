@@ -22,9 +22,10 @@ export default function Messages() {
   }, [])
 
   useEffect(() => {
-    if (activeConvo) {
-      fetchMessages(activeConvo)
-    }
+    const interval = setInterval(() => {
+    if (activeConvo) fetchMessages(activeConvo)
+    }, 5000)
+    return () => clearInterval(interval)
   }, [activeConvo])
 
   useEffect(() => {

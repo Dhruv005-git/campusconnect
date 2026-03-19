@@ -119,6 +119,7 @@ export default function CreateLendItem() {
                   className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#534AB7] bg-white"
                 >
                   <option value="">Select</option>
+                  <option value="All">All departments</option>
                   <option>Computer Science</option>
                   <option>Mechanical Engineering</option>
                   <option>Civil Engineering</option>

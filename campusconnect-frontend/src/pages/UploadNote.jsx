@@ -131,6 +131,7 @@ export default function UploadNote() {
                   className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#534AB7] bg-white"
                 >
                   <option value="">Select</option>
+                  <option value="0">All semesters</option>
                   {[1,2,3,4,5,6,7,8].map(s => (
                     <option key={s} value={s}>Sem {s}</option>
                   ))}
@@ -145,6 +146,7 @@ export default function UploadNote() {
                 className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#534AB7] bg-white"
               >
                 <option value="">Select department</option>
+                <option value="All">All departments</option>
                 <option>Computer Science</option>
                 <option>Mechanical Engineering</option>
                 <option>Civil Engineering</option>

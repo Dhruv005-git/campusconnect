@@ -75,7 +75,7 @@ export default function ListingDetail() {
 
           <div className="h-64 bg-[#EEEDFE] flex items-center justify-center">
             {listing.images?.length > 0 ? (
-              <img src={listing.images[activeImg]} alt={listing.title} className="w-full h-full object-cover" />
+              <img src={listing.images[activeImg]} alt={listing.title} className="w-full h-full object-contain p-2" />
             ) : (
               <span className="text-7xl">{emoji}</span>
             )}
@@ -103,9 +103,9 @@ export default function ListingDetail() {
               <span className="text-xs bg-[#EEEDFE] text-[#3C3489] px-2.5 py-1 rounded-full font-medium">
                 {listing.department}
               </span>
-              <span className="text-xs bg-[#E1F5EE] text-[#085041] px-2.5 py-1 rounded-full font-medium">
-                Sem {listing.semester}
-              </span>
+                <span className="text-xs bg-[#E1F5EE] text-[#085041] px-2.5 py-1 rounded-full font-medium">
+                {listing.semester == 0 ? "All sems" : `Sem ${listing.semester}`}
+                </span>
               <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${condition.bg} ${condition.text}`}>
                 {condition.label}
               </span>
@@ -136,7 +136,7 @@ export default function ListingDetail() {
               {[
                 ["Category", listing.category],
                 ["Department", listing.department],
-                ["Semester", `Sem ${listing.semester}`],
+                ["Semester", listing.semester == 0 ? "All semesters" : `Sem ${listing.semester}`],
                 ["Condition", condition.label],
               ].map(([key, val]) => (
                 <div key={key} className="bg-gray-50 rounded-xl p-3">

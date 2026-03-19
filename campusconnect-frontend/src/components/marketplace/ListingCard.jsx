@@ -52,8 +52,8 @@ export default function ListingCard({ listing }) {
           </div>
 
           <p className="text-xs text-gray-400 mb-3">
-            {listing.department} · Sem {listing.semester}
-          </p>
+            {listing.department} · {listing.semester == 0 ? "All sems" : `Sem ${listing.semester}`}
+           </p>
 
           <div className="flex items-center justify-between">
             <div className="flex items-baseline gap-1.5">

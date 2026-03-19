@@ -57,7 +57,7 @@ export default function Login() {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                placeholder="you@gmail.com"
+                placeholder="name@sot.pdpu.ac.in"
                 className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#534AB7] transition-colors"
               />
             </div>
