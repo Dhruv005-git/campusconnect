@@ -5,6 +5,7 @@ import express from "express"
 import cors from "cors"
 import { connectDB } from "./config/db.js"
 import authRoutes from "./routes/auth.routes.js"
+import notesRoutes from "./routes/notes.routes.js"
 
 connectDB()
 
@@ -14,6 +15,7 @@ app.use(express.json())
 
 app.use("/api/auth", authRoutes)
 app.use("/api/listings", listingRoutes)
+app.use("/api/notes", notesRoutes)
 app.get("/", (req, res) => res.send("CampusConnect API running"))
 
 const PORT = process.env.PORT || 5000

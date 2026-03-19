@@ -45,6 +45,16 @@ export default function Navbar() {
           >
             Sell item
           </Link>
+          <Link
+            to="/notes"
+            className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                isActive("/notes")
+                ? "bg-[#EEEDFE] text-[#3C3489] font-medium"
+                : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+            }`}
+            >
+            Notes
+          </Link>
         </div>
 
         {/* Right side */}
