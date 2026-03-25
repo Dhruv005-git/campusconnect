@@ -16,19 +16,17 @@ const app = express()
 const httpServer = createServer(app)
 
 const allowedOrigins = [
-  "http://localhost:5173",
-  "https://campusconnect-six-tau.vercel.app"
+  'http://localhost:5173',
+  'https://campusconnect-six-tau.vercel.app',
+  'http://localhost:3000'
 ]
 
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true)
-    } else {
-      callback(new Error("Not allowed by CORS"))
-    }
-  }
+  origin: allowedOrigins,
+  credentials: true
 }))
+
+app.set('trust proxy', 1)
 
 export const io = new Server(httpServer, {
   cors: {
