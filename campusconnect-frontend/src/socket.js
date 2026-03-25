@@ -1,6 +1,10 @@
 import { io } from "socket.io-client"
 
-const socket = io(import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000", {
+// socket.io server lives at the backend host root, not under "/api"
+const rawApiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000"
+const socketUrl = rawApiUrl.replace(/\/api\/?$/, "")
+
+const socket = io(socketUrl, {
   autoConnect: false,
 })
 
