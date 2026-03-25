@@ -17,7 +17,7 @@ const httpServer = createServer(app)
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://campusconnect-frontend.vercel.app" // baad mein actual URL se replace karenge
+  "https://campusconnect-six-tau.vercel.app"
 ]
 
 app.use(cors({
