@@ -11,6 +11,8 @@ const apiBaseUrl = normalizedApiUrl.endsWith("/api")
 
 const api = axios.create({
   baseURL: apiBaseUrl,
+  // Ensure "Send OTP..." never gets stuck forever in case backend/email service hangs.
+  timeout: 12000,
 })
 
 api.interceptors.request.use((config) => {

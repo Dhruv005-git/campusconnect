@@ -32,7 +32,16 @@ export const register = async (req, res) => {
       otp, otpExpiry
     })
 
-    await sendOTPEmail(email, otp, name)
+    try {
+      await sendOTPEmail(email, otp, name)
+    } catch (err) {
+      // If SMTP fails/blocks, don't leave the request hanging.
+      // The UI will show this message to the user.
+      console.error("sendOTPEmail failed:", err?.message || err)
+      return res.status(500).json({
+        message: "Could not send OTP email. Please try again in a few minutes."
+      })
+    }
 
     res.status(201).json({
       message: "Registered! Check your email for OTP.",
