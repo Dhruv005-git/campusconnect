@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import Navbar from "../components/layout/Navbar"
 import api from "../api/axios"
+import socket from "../socket"
 
 export default function Messages() {
   const { user } = useAuth()
@@ -15,17 +16,53 @@ export default function Messages() {
   const [content, setContent] = useState("")
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
+  const [typingUser, setTypingUser] = useState("")
+  const [onlineUsers, setOnlineUsers] = useState([])
   const messagesEndRef = useRef(null)
+  const typingTimeoutRef = useRef(null)
+
+  const getRoomId = (userId1, userId2) => {
+    return [userId1, userId2].sort().join("_")
+  }
 
   useEffect(() => {
     fetchConversations()
+
+    // Socket events
+    socket.on("receive_message", (message) => {
+      setMessages((prev) => [...prev, message])
+      fetchConversations()
+    })
+
+    socket.on("user_typing", (userName) => {
+      setTypingUser(userName)
+      setIsTyping(true)
+    })
+
+    socket.on("user_stop_typing", () => {
+      setIsTyping(false)
+      setTypingUser("")
+    })
+
+    socket.on("online_users", (users) => {
+      setOnlineUsers(users)
+    })
+
+    return () => {
+      socket.off("receive_message")
+      socket.off("user_typing")
+      socket.off("user_stop_typing")
+      socket.off("online_users")
+    }
   }, [])
 
   useEffect(() => {
-    const interval = setInterval(() => {
-    if (activeConvo) fetchMessages(activeConvo)
-    }, 5000)
-    return () => clearInterval(interval)
+    if (activeConvo && user) {
+      fetchMessages(activeConvo)
+      const roomId = getRoomId(user._id, activeConvo)
+      socket.emit("join_room", roomId)
+    }
   }, [activeConvo])
 
   useEffect(() => {
@@ -37,7 +74,7 @@ export default function Messages() {
     try {
       const res = await api.get("/messages/conversations")
       setConversations(res.data)
-      if (otherUserId && !activeUser) {
+      if (otherUserId) {
         const convo = res.data.find(c => c.user._id === otherUserId)
         if (convo) setActiveUser(convo.user)
       }
@@ -60,19 +97,37 @@ export default function Messages() {
   const handleSelectConvo = (convo) => {
     setActiveConvo(convo.user._id)
     setActiveUser(convo.user)
+    setMessages([])
     navigate(`/messages/${convo.user._id}`, { replace: true })
+  }
+
+  const handleTyping = (e) => {
+    setContent(e.target.value)
+
+    if (!activeConvo || !user) return
+    const roomId = getRoomId(user._id, activeConvo)
+    socket.emit("typing", { roomId, userName: user.name })
+
+    clearTimeout(typingTimeoutRef.current)
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("stop_typing", { roomId })
+    }, 1500)
   }
 
   const handleSend = async (e) => {
     e.preventDefault()
     if (!content.trim() || !activeConvo) return
     setSending(true)
+
+    const roomId = getRoomId(user._id, activeConvo)
+    socket.emit("stop_typing", { roomId })
+
     try {
       const res = await api.post("/messages", {
         receiverId: activeConvo,
         content,
       })
-      setMessages([...messages, res.data])
+      setMessages((prev) => [...prev, res.data])
       setContent("")
       fetchConversations()
     } catch (err) {
@@ -82,17 +137,15 @@ export default function Messages() {
     }
   }
 
-  const formatTime = (date) => {
-    return new Date(date).toLocaleTimeString("en-IN", {
-      hour: "2-digit", minute: "2-digit"
-    })
-  }
+  const formatTime = (date) => new Date(date).toLocaleTimeString("en-IN", {
+    hour: "2-digit", minute: "2-digit"
+  })
 
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString("en-IN", {
-      day: "numeric", month: "short"
-    })
-  }
+  const formatDate = (date) => new Date(date).toLocaleDateString("en-IN", {
+    day: "numeric", month: "short"
+  })
+
+  const isOnline = (userId) => onlineUsers.includes(userId)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -102,12 +155,11 @@ export default function Messages() {
 
         <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden flex" style={{ height: "600px" }}>
 
-          {/* Conversations sidebar */}
+          {/* Sidebar */}
           <div className="w-72 border-r border-gray-200 flex flex-col flex-shrink-0">
             <div className="p-4 border-b border-gray-100">
               <p className="text-sm font-medium text-gray-700">Conversations</p>
             </div>
-
             <div className="flex-1 overflow-y-auto">
               {loading ? (
                 <div className="p-4 space-y-3">
@@ -119,7 +171,6 @@ export default function Messages() {
                 <div className="p-6 text-center">
                   <div className="text-3xl mb-2">💬</div>
                   <p className="text-xs text-gray-500">No conversations yet</p>
-                  <p className="text-xs text-gray-400 mt-1">Contact a seller to start chatting</p>
                 </div>
               ) : (
                 conversations.map((convo) => (
@@ -127,13 +178,16 @@ export default function Messages() {
                     key={convo.user._id}
                     onClick={() => handleSelectConvo(convo)}
                     className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors ${
-                      activeConvo === convo.user._id
-                        ? "bg-[#EEEDFE]"
-                        : "hover:bg-gray-50"
+                      activeConvo === convo.user._id ? "bg-[#EEEDFE]" : "hover:bg-gray-50"
                     }`}
                   >
-                    <div className="w-9 h-9 rounded-full bg-[#534AB7] flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-                      {convo.user.name?.charAt(0).toUpperCase()}
+                    <div className="relative flex-shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-[#534AB7] flex items-center justify-center text-white text-sm font-medium">
+                        {convo.user.name?.charAt(0).toUpperCase()}
+                      </div>
+                      {isOnline(convo.user._id) && (
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
@@ -162,19 +216,29 @@ export default function Messages() {
                 <div className="text-center">
                   <div className="text-4xl mb-3">💬</div>
                   <p className="text-gray-500 text-sm">Select a conversation</p>
-                  <p className="text-xs text-gray-400 mt-1">Or contact a seller from their listing</p>
                 </div>
               </div>
             ) : (
               <>
-                {/* Chat header */}
+                {/* Header */}
                 <div className="px-5 py-3.5 border-b border-gray-100 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#534AB7] flex items-center justify-center text-white text-sm font-medium">
-                    {activeUser?.name?.charAt(0).toUpperCase()}
+                  <div className="relative">
+                    <div className="w-8 h-8 rounded-full bg-[#534AB7] flex items-center justify-center text-white text-sm font-medium">
+                      {activeUser?.name?.charAt(0).toUpperCase()}
+                    </div>
+                    {isOnline(activeConvo) && (
+                      <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
+                    )}
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">{activeUser?.name}</p>
-                    <p className="text-xs text-gray-400">{activeUser?.department} · Year {activeUser?.year}</p>
+                    <p className="text-xs text-gray-400">
+                      {isOnline(activeConvo) ? (
+                        <span className="text-green-500">Online</span>
+                      ) : (
+                        `${activeUser?.department} · Year ${activeUser?.year}`
+                      )}
+                    </p>
                   </div>
                 </div>
 
@@ -223,6 +287,25 @@ export default function Messages() {
                       )
                     })
                   )}
+
+                  {/* Typing indicator */}
+                  {isTyping && (
+                    <div className="flex justify-start">
+                      <div className="bg-gray-100 rounded-2xl rounded-bl-sm px-4 py-2.5 flex items-center gap-1">
+                        <span className="text-xs text-gray-500">{typingUser} is typing</span>
+                        <div className="flex gap-0.5 ml-1">
+                          {[0,1,2].map((i) => (
+                            <div
+                              key={i}
+                              className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+                              style={{ animationDelay: `${i * 0.15}s` }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div ref={messagesEndRef} />
                 </div>
 
@@ -231,7 +314,7 @@ export default function Messages() {
                   <input
                     type="text"
                     value={content}
-                    onChange={(e) => setContent(e.target.value)}
+                    onChange={handleTyping}
                     placeholder="Type a message..."
                     className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#534AB7] transition-colors"
                   />

@@ -1,4 +1,5 @@
 import Message from "../models/Message.js"
+import { io } from "../server.js"
 
 // Get all conversations (unique users tumne baat ki hai)
 export const getConversations = async (req, res) => {
@@ -88,6 +89,10 @@ export const sendMessage = async (req, res) => {
       { path: "sender", select: "name" },
       { path: "listing", select: "title images price" },
     ])
+
+    // Socket.io — real time emit
+    const roomId = [req.user._id.toString(), receiverId].sort().join("_")
+    io.to(roomId).emit("receive_message", populated)
 
     res.status(201).json(populated)
   } catch (err) {
