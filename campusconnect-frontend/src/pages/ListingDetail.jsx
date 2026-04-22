@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useNavigate, useParams, Link } from "react-router-dom"
 import api from "../api/axios"
 import Navbar from "../components/layout/Navbar"
 import { useAuth } from "../context/AuthContext"
@@ -23,6 +23,8 @@ export default function ListingDetail() {
   const [listing, setListing] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeImg, setActiveImg] = useState(0)
+  const [deleting, setDeleting] = useState(false)
+  const [toggling, setToggling] = useState(false)
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -37,6 +39,27 @@ export default function ListingDetail() {
     }
     fetchListing()
   }, [id])
+
+  const handleDelete = async () => {
+    if (!window.confirm("Delete this listing? This cannot be undone.")) return
+    setDeleting(true)
+    try {
+      await api.delete(`/listings/${id}`)
+      navigate("/marketplace")
+    } catch {
+      setDeleting(false)
+    }
+  }
+
+  const handleToggle = async () => {
+    setToggling(true)
+    try {
+      const res = await api.patch(`/listings/${id}/toggle`)
+      setListing(res.data)
+    } finally {
+      setToggling(false)
+    }
+  }
 
   if (loading) return (
     <div className="min-h-screen bg-gray-50">
@@ -168,8 +191,52 @@ export default function ListingDetail() {
             </div>
 
             {isOwner ? (
-              <div className="bg-[#EEEDFE] rounded-xl p-3 text-center">
-                <p className="text-sm text-[#3C3489] font-medium">This is your listing</p>
+              <div className="space-y-3">
+                {/* availability badge */}
+                <div className={`rounded-xl px-4 py-2.5 flex items-center gap-2 text-sm font-medium ${
+                  listing.isAvailable
+                    ? "bg-[#EAF3DE] text-[#27500A]"
+                    : "bg-[#FCEBEB] text-[#791F1F]"
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${
+                    listing.isAvailable ? "bg-[#1D9E75]" : "bg-red-400"
+                  }`} />
+                  {listing.isAvailable ? "Listed — visible to buyers" : "Marked as sold / unavailable"}
+                </div>
+
+                {/* owner actions */}
+                <div className="grid grid-cols-3 gap-2">
+                  <Link
+                    to={`/listings/${id}/edit`}
+                    className="flex items-center justify-center gap-1.5 border border-[#534AB7] text-[#534AB7] rounded-xl py-2.5 text-xs font-medium hover:bg-[#EEEDFE] transition-colors"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                      <path d="M11.5 2.5a1.41 1.41 0 0 1 2 2L5 13H3v-2L11.5 2.5Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+                    </svg>
+                    Edit
+                  </Link>
+                  <button
+                    onClick={handleToggle}
+                    disabled={toggling}
+                    className="flex items-center justify-center gap-1.5 border border-gray-200 text-gray-700 rounded-xl py-2.5 text-xs font-medium hover:bg-gray-50 transition-colors disabled:opacity-60"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                      <rect x="1" y="5" width="14" height="6" rx="3" stroke="currentColor" strokeWidth="1.4"/>
+                      <circle cx={listing.isAvailable ? "11" : "5"} cy="8" r="2.2" fill="currentColor"/>
+                    </svg>
+                    {toggling ? "…" : listing.isAvailable ? "Sold" : "Relist"}
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="flex items-center justify-center gap-1.5 border border-red-200 text-red-500 rounded-xl py-2.5 text-xs font-medium hover:bg-red-50 transition-colors disabled:opacity-60"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                      <path d="M2 4h12M5 4V2h6v2M6 7v5M10 7v5M3 4l1 9h8l1-9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    {deleting ? "…" : "Delete"}
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="flex gap-3">

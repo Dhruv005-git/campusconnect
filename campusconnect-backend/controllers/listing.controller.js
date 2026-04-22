@@ -81,6 +81,54 @@ export const createListing = async (req, res) => {
   }
 }
 
+// Update listing (seller only)
+export const updateListing = async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id)
+    if (!listing) return res.status(404).json({ message: "Listing not found" })
+    if (listing.seller.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized" })
+    }
+
+    const { title, description, price, mrp, condition, category, department, semester, keepImages } = req.body
+
+    // Upload new images if provided
+    let images = listing.images // default: keep existing
+    if (req.files && req.files.length > 0) {
+      const newImages = []
+      for (const file of req.files) {
+        const base64 = file.buffer.toString("base64")
+        const dataUri = `data:${file.mimetype};base64,${base64}`
+        const result = await cloudinary.uploader.upload(dataUri, { folder: "campusconnect" })
+        newImages.push(result.secure_url)
+      }
+      // keepImages = JSON array of existing URLs the user wants to retain
+      const kept = keepImages ? JSON.parse(keepImages) : []
+      images = [...kept, ...newImages].slice(0, 4)
+    } else if (keepImages) {
+      // user removed some existing images but didn't add new ones
+      images = JSON.parse(keepImages).slice(0, 4)
+    }
+
+    const updated = await Listing.findByIdAndUpdate(
+      req.params.id,
+      {
+        title, description,
+        price: Number(price),
+        mrp: mrp ? Number(mrp) : undefined,
+        condition, category, department,
+        semester: semester !== undefined ? Number(semester) : listing.semester,
+        images,
+      },
+      { new: true }
+    ).populate("seller", "name department year rating reviewCount")
+
+    res.json(updated)
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
 // Delete listing
 export const deleteListing = async (req, res) => {
   try {

@@ -13,6 +13,7 @@ import Lending from "./pages/Lending"
 import CreateLendItem from "./pages/CreateLendItem"
 import Messages from "./pages/Messages"
 import Home from "./pages/Home"
+import EditListing from "./pages/EditListing"
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -38,6 +39,7 @@ export default function App() {
       <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
       <Route path="/listings/:id" element={<ProtectedRoute><ListingDetail /></ProtectedRoute>} />
       <Route path="/create-listing" element={<ProtectedRoute><CreateListing /></ProtectedRoute>} />
+      <Route path="/listings/:id/edit" element={<ProtectedRoute><EditListing /></ProtectedRoute>} />
       <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
       <Route path="/upload-note" element={<ProtectedRoute><UploadNote /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
