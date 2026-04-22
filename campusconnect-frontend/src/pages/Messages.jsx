@@ -9,6 +9,7 @@ export default function Messages() {
   const { user } = useAuth()
   const { otherUserId } = useParams()
   const navigate = useNavigate()
+
   const [conversations, setConversations] = useState([])
   const [messages, setMessages] = useState([])
   const [activeConvo, setActiveConvo] = useState(otherUserId || null)
@@ -19,6 +20,7 @@ export default function Messages() {
   const [isTyping, setIsTyping] = useState(false)
   const [typingUser, setTypingUser] = useState("")
   const [onlineUsers, setOnlineUsers] = useState([])
+
   const messagesEndRef = useRef(null)
   const typingTimeoutRef = useRef(null)
 
@@ -26,45 +28,62 @@ export default function Messages() {
     return [userId1, userId2].sort().join("_")
   }
 
+  // ✅ SOCKET SETUP (FIXED)
   useEffect(() => {
     fetchConversations()
 
-    // Socket events
-    socket.on("receive_message", (message) => {
-      setMessages((prev) => [...prev, message])
+    const handleReceiveMessage = (message) => {
+      setMessages((prev) => {
+        const exists = prev.some(m => m._id === message._id)
+        if (exists) return prev
+        return [...prev, message]
+      })
       fetchConversations()
-    })
+    }
 
-    socket.on("user_typing", (userName) => {
+    const handleTyping = (userName) => {
       setTypingUser(userName)
       setIsTyping(true)
-    })
+    }
 
-    socket.on("user_stop_typing", () => {
-      setIsTyping(false)
+    const handleStopTyping = () => {
       setTypingUser("")
-    })
+      setIsTyping(false)
+    }
 
-    socket.on("online_users", (users) => {
+    const handleOnlineUsers = (users) => {
       setOnlineUsers(users)
-    })
+    }
+
+    socket.on("receive_message", handleReceiveMessage)
+    socket.on("user_typing", handleTyping)
+    socket.on("user_stop_typing", handleStopTyping)
+    socket.on("online_users", handleOnlineUsers)
 
     return () => {
-      socket.off("receive_message")
-      socket.off("user_typing")
-      socket.off("user_stop_typing")
-      socket.off("online_users")
+      socket.off("receive_message", handleReceiveMessage)
+      socket.off("user_typing", handleTyping)
+      socket.off("user_stop_typing", handleStopTyping)
+      socket.off("online_users", handleOnlineUsers)
     }
   }, [])
 
-  useEffect(() => {
-    if (activeConvo && user) {
-      fetchMessages(activeConvo)
-      const roomId = getRoomId(user._id, activeConvo)
-      socket.emit("join_room", roomId)
+  // ✅ JOIN ROOM + FETCH MESSAGES
+useEffect(() => {
+  if (activeConvo && user) {
+    const load = async () => {
+      await fetchMessages(activeConvo)
+      await fetchConversations() // refresh unread count
     }
-  }, [activeConvo])
 
+    load()
+
+    const roomId = getRoomId(user._id, activeConvo)
+    socket.emit("join_room", roomId)
+  }
+}, [activeConvo, user])
+
+  // ✅ AUTO SCROLL
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
@@ -74,6 +93,7 @@ export default function Messages() {
     try {
       const res = await api.get("/messages/conversations")
       setConversations(res.data)
+
       if (otherUserId) {
         const convo = res.data.find(c => c.user._id === otherUserId)
         if (convo) setActiveUser(convo.user)
@@ -97,7 +117,7 @@ export default function Messages() {
   const handleSelectConvo = (convo) => {
     setActiveConvo(convo.user._id)
     setActiveUser(convo.user)
-    setMessages([])
+    // setMessages([])
     navigate(`/messages/${convo.user._id}`, { replace: true })
   }
 
@@ -105,6 +125,7 @@ export default function Messages() {
     setContent(e.target.value)
 
     if (!activeConvo || !user) return
+
     const roomId = getRoomId(user._id, activeConvo)
     socket.emit("typing", { roomId, userName: user.name })
 
@@ -114,9 +135,11 @@ export default function Messages() {
     }, 1500)
   }
 
+  // ✅ FIXED SEND (NO DUPLICATION)
   const handleSend = async (e) => {
     e.preventDefault()
     if (!content.trim() || !activeConvo) return
+
     setSending(true)
 
     const roomId = getRoomId(user._id, activeConvo)
@@ -127,7 +150,15 @@ export default function Messages() {
         receiverId: activeConvo,
         content,
       })
-      setMessages((prev) => [...prev, res.data])
+
+      // ❗ IMPORTANT: DO NOT setMessages here
+      // socket will handle it
+
+      socket.emit("send_message", {
+        roomId,
+        message: res.data,
+      })
+
       setContent("")
       fetchConversations()
     } catch (err) {
@@ -137,13 +168,17 @@ export default function Messages() {
     }
   }
 
-  const formatTime = (date) => new Date(date).toLocaleTimeString("en-IN", {
-    hour: "2-digit", minute: "2-digit"
-  })
+  const formatTime = (date) =>
+    new Date(date).toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })
 
-  const formatDate = (date) => new Date(date).toLocaleDateString("en-IN", {
-    day: "numeric", month: "short"
-  })
+  const formatDate = (date) =>
+    new Date(date).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+    })
 
   const isOnline = (userId) => onlineUsers.includes(userId)
 

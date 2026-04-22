@@ -49,7 +49,6 @@ app.get("/", (req, res) => res.send("CampusConnect API running"))
 const onlineUsers = new Map() // userId -> socketId
 
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id)
 
   // User online ho gaya
   socket.on("user_online", (userId) => {
@@ -85,7 +84,6 @@ io.on("connection", (socket) => {
       }
     })
     io.emit("online_users", Array.from(onlineUsers.keys()))
-    console.log("User disconnected:", socket.id)
   })
 })
 

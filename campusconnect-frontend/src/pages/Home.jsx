@@ -150,30 +150,31 @@ export default function Home() {
         </motion.div>
 
         {/* Recent listings */}
-        <motion.div
-          variants={stagger}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true }}
-        >
-          <motion.div variants={fadeUp} className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-medium text-gray-900 ">Recent listings</h2>
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-medium text-gray-900">Recent listings</h2>
             <Link to="/marketplace" className="text-sm text-[#534AB7] hover:underline">See all →</Link>
-          </motion.div>
+          </div>
           {loading ? (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-white  border border-gray-200  rounded-2xl h-48 animate-pulse" />
+                <div key={i} className="bg-white border border-gray-200 rounded-2xl h-48 animate-pulse" />
               ))}
             </div>
           ) : listings.length === 0 ? (
-            <motion.div variants={fadeUp} className="text-center py-10 bg-white  border border-gray-200  rounded-2xl">
+            <div className="text-center py-10 bg-white border border-gray-200 rounded-2xl">
               <div className="text-3xl mb-2">📭</div>
               <p className="text-sm text-gray-500 mb-2">No listings yet</p>
               <Link to="/create-listing" className="text-sm text-[#534AB7] hover:underline">Post the first one!</Link>
-            </motion.div>
+            </div>
           ) : (
-            <motion.div variants={stagger} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <motion.div
+              key={listings.map(l => l._id).join()}
+              variants={stagger}
+              initial="hidden"
+              animate="show"
+              className="grid grid-cols-2 sm:grid-cols-4 gap-4"
+            >
               {listings.map((listing) => (
                 <motion.div key={listing._id} variants={fadeUp}>
                   <ListingCard listing={listing} />
@@ -181,7 +182,7 @@ export default function Home() {
               ))}
             </motion.div>
           )}
-        </motion.div>
+        </div>
 
         {/* Available to borrow */}
         <motion.div
